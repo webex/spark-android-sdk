@@ -3,5 +3,11 @@
         package="com.ciscospark.androidsdk">
         <uses-permission android:name="android.permission.INTERNET" />
         <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+        <application>
+        <activity
+            android:exported="false"
+            android:name=".internal.AcquireScreenshotPermissionActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        </application>
 </manifest>
 

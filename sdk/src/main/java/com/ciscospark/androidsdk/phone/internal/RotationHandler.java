@@ -29,7 +29,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.view.WindowManager;
 
-class RotationHandler {
+public class RotationHandler {
     static BroadcastReceiver _receiver;
 
     static class RotationBroadcastReceiver extends BroadcastReceiver {
@@ -58,6 +58,12 @@ class RotationHandler {
         if (_receiver != null) {
             context.unregisterReceiver(_receiver);
             _receiver = null;
+        }
+    }
+
+    public static void setScreenshotPermission(final Intent permissionIntent){
+        if (_receiver != null) {
+            ((RotationBroadcastReceiver)_receiver)._phoneImpl.setScreenshotPermission(permissionIntent);
         }
     }
 }

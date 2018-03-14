@@ -1047,6 +1047,8 @@ public class PhoneImpl implements Phone {
             if (_bus.isRegistered(call)) {
                 _bus.unregister(call);
             }
+            lostSharingParticipant = null;
+            currentSharingUri = null;
         }
     }
 

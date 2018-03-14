@@ -67,6 +67,7 @@ import com.cisco.spark.android.events.CallNotificationEvent;
 import com.cisco.spark.android.events.CallNotificationType;
 import com.cisco.spark.android.events.DeviceRegistrationChangedEvent;
 import com.cisco.spark.android.events.RequestCallingPermissions;
+import com.cisco.spark.android.locus.events.FloorLostEvent;
 import com.cisco.spark.android.locus.events.FloorReleasedAcceptedEvent;
 import com.cisco.spark.android.locus.events.FloorReleasedDeniedEvent;
 import com.cisco.spark.android.locus.events.FloorRequestAcceptedEvent;
@@ -184,15 +185,9 @@ public class PhoneImpl implements Phone {
 
     private int sharingMaxBandwidth = DefaultBandwidth.maxBandwidthSession.getValue();
 
-    private LocusParticipant currentSharingParticipant;
+    private LocusParticipant lostSharingParticipant;
 
-    private enum SharingStatus{
-        NONE,
-        SELF,
-        REOMTE
-    }
-
-    private SharingStatus sharingStatus = SharingStatus.NONE;
+    private Uri currentSharingUri;
 
     private static class DialTarget {
         private String address;
@@ -980,9 +975,9 @@ public class PhoneImpl implements Phone {
         List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
         CallImpl call = _calls.get(event.getLocusKey());
         if (call != null) {
-            LocusData locusData = _callControlService.getLocusData(event.getLocusKey());
-            if (locusData != null){
-                currentSharingParticipant = locusData.getParticipantSharing();
+            LocusParticipant beneficiary = _callControlService.getLocus(event.getLocusKey()).getFloorBeneficiary();
+            if (beneficiary != null) {
+                currentSharingUri = beneficiary.getDeviceUrl();
             }
             for (CallMembership membership : call.getMemberships()) {
                 if (membership.isSendingSharing()) {
@@ -996,10 +991,8 @@ public class PhoneImpl implements Phone {
             if (observer != null) {
                 if (call.isSendingSharing()) {
                     observer.onMediaChanged(new CallObserver.SendingSharingEvent(call, true));
-                    sharingStatus = SharingStatus.SELF;
-                } else if (call.isRemoteSendingSharing() && sharingStatus == SharingStatus.NONE) {
+                } else if (call.isRemoteSendingSharing() && lostSharingParticipant == null) {
                     observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, true));
-                    sharingStatus = SharingStatus.REOMTE;
                 }
             }
         }
@@ -1014,7 +1007,7 @@ public class PhoneImpl implements Phone {
         LocusParticipant beneficiary = locusData.getReleasedParticipantSharing();
         if (beneficiary == null){
             Ln.w("getReleasedParticipantSharing is null!");
-            beneficiary = currentSharingParticipant;
+            beneficiary = lostSharingParticipant;
         }
         if (call != null && locusData != null && beneficiary != null) {
             for (CallMembership membership : call.getMemberships()) {
@@ -1029,19 +1022,15 @@ public class PhoneImpl implements Phone {
 
             CallObserver observer = call.getObserver();
             if (observer != null) {
-                if (beneficiary.getPerson() != null
-                        && beneficiary.getPerson().getId() != null
-                        && call.getSelf().getPerson().getId().equalsIgnoreCase(beneficiary.getPerson().getId())
-                        && sharingStatus == SharingStatus.SELF) {
+                if (currentSharingUri != null && currentSharingUri.equals(_device.getUrl())) {
                     observer.onMediaChanged(new CallObserver.SendingSharingEvent(call, false));
-                    sharingStatus = SharingStatus.NONE;
+                    lostSharingParticipant = null;
                 }else if (!locusData.isFloorGranted() || isSharingFromThisDevice(locusData)){
                     observer.onMediaChanged(new CallObserver.RemoteSendingSharingEvent(call, false));
-                    sharingStatus = SharingStatus.NONE;
+                    lostSharingParticipant = null;
                 }
             }
         }
-        currentSharingParticipant = null;
     }
 
 
@@ -1282,6 +1271,25 @@ public class PhoneImpl implements Phone {
             CallImpl call = _calls.get(screenSharingKey);
             if (call != null && call.getshareReleaseCallback() != null){
                 call.getshareReleaseCallback().onComplete(ResultImpl.error("Share release is deined"));
+            }
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEventMainThread(FloorLostEvent event) {
+        Ln.d("FloorLostEvent is received");
+        CallImpl call = _calls.get(event.getLocusKey());
+        if (call != null && call.getStatus() == Call.CallStatus.CONNECTED) {
+            LocusParticipant beneficiary = event.getLocalMediaShare().getFloor().getBeneficiary();
+            if (beneficiary != null) {
+                LocusData locusData = _callControlService.getLocusData(event.getLocusKey());
+                if (locusData != null){
+                    lostSharingParticipant = locusData.getParticipant(beneficiary.getUrl());
+                    if (lostSharingParticipant.getPerson() == null)
+                        Ln.w("lostSharingParticipant getPerson is null");
+                    else
+                        Ln.d("lostSharingParticipant email: " + lostSharingParticipant.getPerson().getEmail());
+                }
             }
         }
     }

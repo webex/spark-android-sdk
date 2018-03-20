@@ -189,6 +189,10 @@ public class PhoneImpl implements Phone {
 
     private Uri currentSharingUri;
 
+    private boolean isRemoteSendingVideo;
+
+    private boolean isRemoteSendingAudio;
+
     private static class DialTarget {
         private String address;
         private AddressType type;
@@ -921,8 +925,11 @@ public class PhoneImpl implements Phone {
             LocusSelfRepresentation self = call.getSelf();
             if (self == null || !self.getUrl().equals(event.getParticipant().getUrl())) {
                 CallObserver observer = call.getObserver();
-                if (observer != null) {
-                    observer.onMediaChanged(new CallObserver.RemoteSendingAudioEvent(call, !event.isMuted()));
+                boolean isSending = call.isRemoteSendingAudio();
+                Ln.d("isRemoteSendingAudio: " + isRemoteSendingAudio + "  isSending: " + isSending);
+                if (observer != null && isRemoteSendingAudio != isSending) {
+                    observer.onMediaChanged(new CallObserver.RemoteSendingAudioEvent(call, isSending));
+                    isRemoteSendingAudio = isSending;
                 }
             } else {
                 // TODO for local ??
@@ -942,8 +949,11 @@ public class PhoneImpl implements Phone {
             LocusSelfRepresentation self = call.getSelf();
             if (self == null || !self.getUrl().equals(event.getParticipant().getUrl())) {
                 CallObserver observer = call.getObserver();
-                if (observer != null) {
-                    observer.onMediaChanged(new CallObserver.RemoteSendingVideoEvent(call, !event.isMuted()));
+                boolean isSending = call.isRemoteSendingVideo();
+                Ln.d("isRemoteSendingVideo: " + isRemoteSendingVideo + "  isSending: " + isSending);
+                if (observer != null && isRemoteSendingVideo != isSending) {
+                    observer.onMediaChanged(new CallObserver.RemoteSendingVideoEvent(call, isSending));
+                    isRemoteSendingVideo = isSending;
                 }
             } else {
                 // TODO for local ??
@@ -1075,6 +1085,9 @@ public class PhoneImpl implements Phone {
         } else {
             Ln.d("call observer is null");
         }
+
+        isRemoteSendingVideo = call.isRemoteSendingVideo();
+        isRemoteSendingAudio = call.isRemoteSendingAudio();
     }
 
     private void _setCallOnRinging(@NonNull CallImpl call) {

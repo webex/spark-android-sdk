@@ -36,6 +36,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Base64;
@@ -96,8 +97,7 @@ import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.Spark;
 import com.ciscospark.androidsdk.SparkError;
 import com.ciscospark.androidsdk.auth.Authenticator;
-import com.ciscospark.androidsdk.internal.AcquireScreenshotPermissionActivity;
-import com.ciscospark.androidsdk.internal.AppFeatures;
+import com.ciscospark.androidsdk.internal.AcquirePermissionActivity;
 import com.ciscospark.androidsdk.internal.MetricsClient;
 import com.ciscospark.androidsdk.internal.ResultImpl;
 import com.ciscospark.androidsdk.internal.SparkInjector;
@@ -425,6 +425,55 @@ public class PhoneImpl implements Phone {
         }
     }
 
+    void makeCall(Bundle data, boolean permission){
+        if (data == null) {
+            Ln.e("makeCall data is null!");
+            return;
+        }
+        int direction = data.getInt(AcquirePermissionActivity.CALL_DIRECTION);
+        if (direction == Call.Direction.INCOMING.ordinal()){
+            Ln.d("make incoming call");
+            CallImpl call = _calls.get(data.getParcelable(AcquirePermissionActivity.CALL_KEY));
+            if (permission && call != null){
+                CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
+                builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
+                _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth));
+                _callControlService.joinCall(builder.build(), false);
+            }else if (call != null && call.getAnswerCallback() != null){
+                Ln.w("permission is deined");
+                call.getAnswerCallback().onComplete(ResultImpl.error("permission deined"));
+            }
+        }else if (direction == Call.Direction.OUTGOING.ordinal()) {
+            Ln.d("make outgoing call");
+            String dialString = data.getString(AcquirePermissionActivity.CALL_STRING);
+            if (permission && dialString != null) {
+                DialTarget target = new DialTarget(dialString);
+                if (target.type == DialTarget.AddressType.PEOPLE_MAIL) {
+                    new PersonClientImpl(_authenticator).list(dialString, null, 1, new CompletionHandler<List<Person>>() {
+                        @Override
+                        public void onComplete(Result<List<Person>> result) {
+                            List<Person> persons = result.getData();
+                            if (!Checker.isEmpty(persons)) {
+                                Person person = persons.get(0);
+                                Ln.d("Lookup target: " + person.getId());
+                                doDial(new DialTarget(person.getId()).address, _dialOption);
+                            } else {
+                                doDial(target.address, _dialOption);
+                            }
+                        }
+                    });
+                } else if (target.isEndpoint()) {
+                    doDial(target.address, _dialOption);
+                } else {
+                    doDialRoomID(target.address, _dialOption);
+                }
+            }else{
+                Ln.w("permission is deined");
+                clearCallback(ResultImpl.error("permission deined"));
+            }
+        }
+    }
+
     public void dial(@NonNull String dialString, @NonNull MediaOption option, @NonNull CompletionHandler<Call> callback) {
         Ln.i("Dialing: " + dialString + ", " + option.hasVideo());
         if (_device == null) {
@@ -448,27 +497,14 @@ public class PhoneImpl implements Phone {
         _dialOption = option;
         _dialCallback = callback;
 
-        DialTarget target = new DialTarget(dialString);
-
-        if (target.type == DialTarget.AddressType.PEOPLE_MAIL) {
-            new PersonClientImpl(_authenticator).list(dialString, null, 1, new CompletionHandler<List<Person>>() {
-                @Override
-                public void onComplete(Result<List<Person>> result) {
-                    List<Person> persons = result.getData();
-                    if (!Checker.isEmpty(persons)) {
-                        Person person = persons.get(0);
-                        Ln.d("Lookup target: " + person.getId());
-                        doDial(new DialTarget(person.getId()).address, option);
-                    } else {
-                        doDial(target.address, option);
-                    }
-                }
-            });
-        } else if (target.isEndpoint()) {
-            doDial(target.address, option);
-        } else {
-            doDialRoomID(target.address, option);
-        }
+        final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC);
+        Bundle bundle = new Bundle();
+        bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, Call.Direction.OUTGOING.ordinal());
+        bundle.putString(AcquirePermissionActivity.CALL_STRING, dialString);
+        intent.putExtra(AcquirePermissionActivity.CALL_DATA, bundle);
+        _context.startActivity(intent);
     }
 
     void answer(@NonNull CallImpl call) {
@@ -506,10 +542,15 @@ public class PhoneImpl implements Phone {
             }
         }
         stopPreview();
-        CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
-        builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
-        _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth));
-        _callControlService.joinCall(builder.build(), false);
+
+        final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_CAMERA_MIC);
+        Bundle bundle = new Bundle();
+        bundle.putInt(AcquirePermissionActivity.CALL_DIRECTION, Call.Direction.INCOMING.ordinal());
+        bundle.putParcelable(AcquirePermissionActivity.CALL_KEY, call.getKey());
+        intent.putExtra(AcquirePermissionActivity.CALL_DATA, bundle);
+        _context.startActivity(intent);
     }
 
     void reject(@NonNull CallImpl call) {
@@ -1310,15 +1351,24 @@ public class PhoneImpl implements Phone {
     }
 
     public void setScreenshotPermission(final Intent permissionIntent) {
-        screenSharingIntent = permissionIntent;
-        _callControlService.shareScreen(screenSharingKey);
+        if (permissionIntent != null) {
+            screenSharingIntent = permissionIntent;
+            _callControlService.shareScreen(screenSharingKey);
+        }else{
+            Ln.w("permission for sharing screen is deined");
+            CallImpl call = _calls.get(screenSharingKey);
+            if (call != null && call.getshareRequestCallback() != null){
+                call.getshareRequestCallback().onComplete(ResultImpl.error("permission deined"));
+            }
+        }
     }
 
     public void startSharing(LocusKey key) {
         Ln.d("startSharing: " + key);
         screenSharingKey = key;
-        final Intent intent = new Intent(_context, AcquireScreenshotPermissionActivity.class);
+        final Intent intent = new Intent(_context, AcquirePermissionActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra(AcquirePermissionActivity.PERMISSION_TYPE, AcquirePermissionActivity.PERMISSION_SCREEN_SHOT);
         _context.startActivity(intent);
     }
 

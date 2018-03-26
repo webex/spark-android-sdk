@@ -27,6 +27,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Bundle;
 import android.view.WindowManager;
 
 public class RotationHandler {
@@ -64,6 +65,12 @@ public class RotationHandler {
     public static void setScreenshotPermission(final Intent permissionIntent){
         if (_receiver != null) {
             ((RotationBroadcastReceiver)_receiver)._phoneImpl.setScreenshotPermission(permissionIntent);
+        }
+    }
+
+    public static void makeCall(Bundle data, boolean permission){
+        if (_receiver != null) {
+            ((RotationBroadcastReceiver)_receiver)._phoneImpl.makeCall(data, permission);
         }
     }
 }

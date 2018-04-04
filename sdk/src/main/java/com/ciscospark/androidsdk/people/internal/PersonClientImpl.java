@@ -51,21 +51,18 @@ public class PersonClientImpl implements PersonClient {
     }
 
     public void list(String email, String displayName, int max, CompletionHandler<List<Person>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, email, displayName, null, null, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.list(s, email, displayName, null, null, max <= 0 ? null : max), new ListCallback<>(handler));
     }
 
     public void get(String personId, CompletionHandler<Person> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, personId).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.get(s, personId), new ObjectCallback<>(handler));
     }
 
     public void getMe(CompletionHandler<Person> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.getMe(s).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.getMe(s), new ObjectCallback<>(handler));
     }
 
     private interface PersonService {

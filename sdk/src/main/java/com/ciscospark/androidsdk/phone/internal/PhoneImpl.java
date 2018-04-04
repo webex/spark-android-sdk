@@ -383,7 +383,8 @@ public class PhoneImpl implements Phone {
             };
             _registerTimer.postDelayed(_registerTimeoutTask, 60 * 1000);
             new AuthenticatedUserTask(_applicationController).execute();
-        });
+            return null;
+        }, null);
     }
 
     public void deregister(@NonNull CompletionHandler<Void> callback) {

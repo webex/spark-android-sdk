@@ -24,6 +24,7 @@ package com.ciscospark.androidsdk.utils.http;
 
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.internal.ResultImpl;
+import com.github.benoitdion.ln.Ln;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -37,6 +38,13 @@ public class ObjectCallback<T> implements Callback<T> {
 
     private CompletionHandler<T> _handler;
 
+    private boolean hasHandleUnauthError = false; // only handle unauth error once
+
+    private ServiceBuilder.UnauthErrorListener _listener;
+    public void setUnauthErrorListener(ServiceBuilder.UnauthErrorListener listener){
+        _listener = listener;
+    }
+
     public ObjectCallback(CompletionHandler<T> handler) {
         _handler = handler;
     }
@@ -45,6 +53,9 @@ public class ObjectCallback<T> implements Callback<T> {
     public void onResponse(Call<T> call, Response<T> response) {
         if (response.isSuccessful()) {
             _handler.onComplete(ResultImpl.success(response.body()));
+        } else if (response.code() == 401 && !hasHandleUnauthError && _listener != null) {
+            hasHandleUnauthError = true;
+            _listener.onUnauthError(response);
         } else {
             _handler.onComplete(ResultImpl.error(response));
         }

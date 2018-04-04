@@ -39,6 +39,13 @@ public class ListCallback<T> implements Callback<ListBody<T>> {
 
     private CompletionHandler<List<T>> _handler;
 
+    private boolean hasHandleUnauthError = false; // only handle unauth error once
+
+    private ServiceBuilder.UnauthErrorListener _listener;
+    public void setUnauthErrorListener(ServiceBuilder.UnauthErrorListener listener){
+        _listener = listener;
+    }
+
     public ListCallback(CompletionHandler<List<T>> handler) {
         _handler = handler;
     }
@@ -47,6 +54,9 @@ public class ListCallback<T> implements Callback<ListBody<T>> {
     public void onResponse(Call<ListBody<T>> call, Response<ListBody<T>> response) {
         if (response.isSuccessful()) {
             _handler.onComplete(ResultImpl.success(response.body().getItems()));
+        } else if (response.code() == 401 && !hasHandleUnauthError && _listener != null) {
+            hasHandleUnauthError = true;
+            _listener.onUnauthError(response);
         } else {
             _handler.onComplete(ResultImpl.error(response));
         }
@@ -56,5 +66,4 @@ public class ListCallback<T> implements Callback<ListBody<T>> {
     public void onFailure(Call<ListBody<T>> call, Throwable t) {
         _handler.onComplete(ResultImpl.error(t));
     }
-
 }

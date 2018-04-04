@@ -66,27 +66,23 @@ public class MessageClientImpl implements MessageClient {
     }
 
     public void list(@NonNull String roomId, @Nullable String before, @Nullable String beforeMessage, @Nullable String mentionedPeople, int max, @NonNull CompletionHandler<List<Message>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, roomId, before, beforeMessage, mentionedPeople, max <= 0 ? null : max).enqueue(new ListCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.list(s, roomId, before, beforeMessage, mentionedPeople, max <= 0 ? null : max), new ListCallback<>(handler));
     }
 
     public void post(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @Nullable String[] files, @NonNull CompletionHandler<Message> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.post(s, Maps.makeMap("roomId", roomId, "toPersonId", personId, "toPersonEmail", personEmail, "text", text, "markdown", markdown, "files", files)).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.post(s, Maps.makeMap("roomId", roomId, "toPersonId", personId, "toPersonEmail", personEmail, "text", text, "markdown", markdown, "files", files)), new ObjectCallback<>(handler));
     }
 
     public void get(@NonNull String messageId, @NonNull CompletionHandler<Message> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, messageId).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.get(s, messageId), new ObjectCallback<>(handler));
     }
 
     public void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.delete(s, messageId).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.delete(s, messageId), new ObjectCallback<>(handler));
     }
 
     private interface MessageService {

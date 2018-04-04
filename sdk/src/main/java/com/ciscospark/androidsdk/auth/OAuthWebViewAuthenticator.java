@@ -118,6 +118,11 @@ public class OAuthWebViewAuthenticator implements Authenticator {
         _authenticator.getToken(handler);
     }
 
+    @Override
+    public void refreshToken(CompletionHandler<String> handler) {
+        _authenticator.refreshToken(handler);
+    }
+
     private String buildCodeGrantUrl() {
         Uri.Builder builder = Uri.parse(ServiceBuilder.HYDRA_URL).buildUpon();
         builder.appendPath("authorize")

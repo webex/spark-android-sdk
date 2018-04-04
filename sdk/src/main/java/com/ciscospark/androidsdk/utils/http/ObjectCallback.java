@@ -34,16 +34,9 @@ import retrofit2.Response;
  * Created by zhiyuliu on 02/09/2017.
  */
 
-public class ObjectCallback<T> implements Callback<T> {
+public class ObjectCallback<T> extends ListenerCallback<T> {
 
     private CompletionHandler<T> _handler;
-
-    private boolean hasHandleUnauthError = false; // only handle unauth error once
-
-    private ServiceBuilder.UnauthErrorListener _listener;
-    public void setUnauthErrorListener(ServiceBuilder.UnauthErrorListener listener){
-        _listener = listener;
-    }
 
     public ObjectCallback(CompletionHandler<T> handler) {
         _handler = handler;
@@ -53,10 +46,7 @@ public class ObjectCallback<T> implements Callback<T> {
     public void onResponse(Call<T> call, Response<T> response) {
         if (response.isSuccessful()) {
             _handler.onComplete(ResultImpl.success(response.body()));
-        } else if (response.code() == 401 && !hasHandleUnauthError && _listener != null) {
-            hasHandleUnauthError = true;
-            _listener.onUnauthError(response);
-        } else {
+        } else if (!checkUnauthError(response)) {
             _handler.onComplete(ResultImpl.error(response));
         }
     }

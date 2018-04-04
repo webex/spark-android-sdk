@@ -108,26 +108,21 @@ public class ServiceBuilder {
         return retrofit.create(service);
     }
 
-    public static <T> void async(Authenticator authenticator, CompletionHandler<T> handler, Closure<String> closure, Callback callback) {
+    public static <T> void async(Authenticator authenticator, CompletionHandler<T> handler, Closure<String> closure, ListenerCallback callback) {
         authenticator.getToken(new CompletionHandler<String>() {
             @Override
             public void onComplete(Result<String> result) {
                 String token = result.getData();
                 if (token != null) {
                     if (callback != null) {
-                        UnauthErrorListener listener = new UnauthErrorListener() {
+                        callback.setUnauthErrorListener(new UnauthErrorListener() {
                             @Override
                             public void onUnauthError(Response response) {
                                 if (!handleUnauthError(authenticator, handler, closure, callback) && handler != null){
                                     handler.onComplete(ResultImpl.error(response));
                                 }
                             }
-                        };
-                        if (callback instanceof ListCallback) {
-                            ((ListCallback) callback).setUnauthErrorListener(listener);
-                        } else if (callback instanceof ObjectCallback) {
-                            ((ObjectCallback) callback).setUnauthErrorListener(listener);
-                        }
+                        });
                     }
 
                     Call call = closure.invoke("Bearer " + token);

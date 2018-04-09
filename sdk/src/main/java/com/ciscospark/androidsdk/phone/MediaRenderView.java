@@ -7,6 +7,16 @@ import android.util.AttributeSet;
 import com.webex.wseclient.WseSurfaceView;
 
 
+/**
+ * Spark media view for local, remote and screen share
+ * <p>
+ * This view is use by {@link MediaOption} and should be placed in Android layout xml file.
+ * <p>
+ * e.g. <MediaRenderView android:id="@+id/localView" />
+ *
+ * @see MediaOption
+ * @since 1.4
+ */
 public class MediaRenderView extends WseSurfaceView {
     public MediaRenderView(Context context) {
         super(context);

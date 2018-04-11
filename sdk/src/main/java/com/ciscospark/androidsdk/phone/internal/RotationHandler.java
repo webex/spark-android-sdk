@@ -27,10 +27,17 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.view.WindowManager;
 
 class RotationHandler {
-    static BroadcastReceiver _receiver;
+    private static BroadcastReceiver _receiver;
+
+    static int getRotation(Context context) {
+        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        int rotation = windowManager.getDefaultDisplay().getRotation();
+        return rotation;
+    }
 
     static class RotationBroadcastReceiver extends BroadcastReceiver {
         PhoneImpl _phoneImpl;
@@ -42,19 +49,18 @@ class RotationHandler {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            _phoneImpl.setDisplayRotation(windowManager.getDefaultDisplay().getRotation());
+            _phoneImpl.setDisplayRotation(getRotation(context));
         }
     }
 
-    public static void registerRotationReceiver(Context context, PhoneImpl phoneImpl) {
+    static void registerRotationReceiver(Context context, PhoneImpl phoneImpl) {
         if (_receiver == null) {
             _receiver = new RotationBroadcastReceiver(phoneImpl);
             context.registerReceiver(_receiver, new IntentFilter(Intent.ACTION_CONFIGURATION_CHANGED));
         }
     }
 
-    public static void unregisterRotationReceiver(Context context) {
+    static void unregisterRotationReceiver(Context context) {
         if (_receiver != null) {
             context.unregisterReceiver(_receiver);
             _receiver = null;

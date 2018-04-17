@@ -22,8 +22,10 @@
 
 package com.ciscospark.androidsdk.phone;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 
+import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -334,4 +336,15 @@ public interface Call {
      * @since 0.1
      */
     void sendFeedback(int rating, @Nullable String comment);
+
+    /**
+     * Send external video data in a call, instead of device camera
+     *
+     * @param byteBuffer  The raw data for each frame
+     * @param width  The frame width.
+     * @param height The frame height.
+     * @param format The frame format.
+     * @since 1.3.0-AR
+     */
+    void inputMediaData(ByteBuffer byteBuffer, int width, int height, MediaOption.VideoRawType format);
 }

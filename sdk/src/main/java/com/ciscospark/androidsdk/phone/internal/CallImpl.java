@@ -22,11 +22,13 @@
 
 package com.ciscospark.androidsdk.phone.internal;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.util.Pair;
 import android.view.View;
@@ -406,6 +408,16 @@ public class CallImpl implements Call {
             info.put("participantId", locus.getSelf().getId().toString());
         }
         _phone.sendFeedback(info);
+    }
+
+    @Override
+    public void inputMediaData(ByteBuffer byteBuffer, int width, int height, MediaOption.VideoRawType format) {
+        if (_status == CallStatus.CONNECTED){
+            com.cisco.spark.android.callcontrol.model.Call call = _phone.getCallService().getCall(getKey());
+            if (call != null && call.getMediaSession() != null){
+                call.getMediaSession().inputMediaData(byteBuffer, width, height, format.ordinal());
+            }
+        }
     }
 
     public Phone.FacingMode getFacingMode() {

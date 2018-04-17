@@ -35,6 +35,45 @@ import android.view.View;
 public class MediaOption {
 
     /**
+     * The enumeration of the raw type for the video frame
+     * @since 1.3.0-AR
+     */
+    public enum VideoRawType{
+        VideoUnknown,
+        /*yuv color formats*/
+        I420,
+        YV12,
+        NV12,
+        NV21,
+        YUY2,
+        UYVY,
+        /*rgb color formats*/
+        RGB24,
+        BGR24,
+        RGB24Flip,
+        BGR24Flip,
+        RGBA32,
+        BGRA32,
+        ARGB32,
+        ABGR32,
+        RGBA32Flip,
+        BGRA32Flip,
+        ARGB32Flip,
+        ABGR32Flip,
+    }
+
+    public class VideoExternalInputterParam {
+        public int frameRate;
+        public int width;
+        public int height;
+        public VideoExternalInputterParam(int frameRate, int width, int height){
+            this.frameRate = frameRate;
+            this.width = width;
+            this.height = height;
+        }
+    }
+
+    /**
      * Constructs an audio only media option.
      *
      * @since 0.1
@@ -91,6 +130,8 @@ public class MediaOption {
 
     private boolean _hasVideo;
 
+    private VideoExternalInputterParam _InputterParam;
+
     private MediaOption(@Nullable View localView, @Nullable View remoteView, @Nullable View sharingView, boolean hasSharing, boolean hasVideo) {
         _localView = localView;
         _remoteView = remoteView;
@@ -143,4 +184,19 @@ public class MediaOption {
         return _sharingView;
     }
 
+    /**
+     * Set paramters for the external video inputter
+     * @since 1.3.0-AR
+     */
+    public void setExternalInputterParam(int frameRate, int width, int height){
+        _InputterParam = new VideoExternalInputterParam(frameRate, width, height);
+    }
+
+    /**
+     * @return The paramters of the external video inputter
+     * @since 1.3.0-AR
+     */
+    public VideoExternalInputterParam getExternalInputterParam(){
+        return _InputterParam;
+    }
 }

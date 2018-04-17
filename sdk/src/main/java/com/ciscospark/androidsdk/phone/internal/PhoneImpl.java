@@ -77,6 +77,7 @@ import com.cisco.spark.android.locus.model.LocusParticipantDevice;
 import com.cisco.spark.android.locus.model.LocusSelfRepresentation;
 import com.cisco.spark.android.locus.responses.LocusUrlResponse;
 import com.cisco.spark.android.media.MediaCapabilityConfig;
+import com.cisco.spark.android.media.MediaInputterParam;
 import com.cisco.spark.android.media.MediaEngine;
 import com.cisco.spark.android.media.MediaSession;
 import com.cisco.spark.android.media.events.StunTraceServerResultEvent;
@@ -488,6 +489,7 @@ public class PhoneImpl implements Phone {
         CallContext.Builder builder = new CallContext.Builder(call.getKey()).setIsAnsweringCall(true).setIsOneOnOne(!call.isGroup());
         builder = builder.setMediaDirection(mediaOptionToMediaDirection(call.getOption()));
         _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth));
+        setInputMediaParam(call.getOption());
         _callControlService.joinCall(builder.build(), false);
     }
 
@@ -1081,6 +1083,7 @@ public class PhoneImpl implements Phone {
         CallContext.Builder builder = new CallContext.Builder(target);
         builder = builder.setMediaDirection(mediaOptionToMediaDirection(option));
         _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth));
+        setInputMediaParam(option);
         _callControlService.joinCall(builder.build(), false);
     }
 
@@ -1094,6 +1097,7 @@ public class PhoneImpl implements Phone {
                     CallContext.Builder builder = new CallContext.Builder(key);
                     builder = builder.setMediaDirection(mediaOptionToMediaDirection(option));
                     _mediaEngine.setMediaConfig(new MediaCapabilityConfig(audioMaxBandwidth, videoMaxBandwidth, sharingMaxBandwidth));
+                    setInputMediaParam(option);
                     _callControlService.joinCall(builder.build(), false);
                 } else {
                     Ln.w("Failure call: " + response.errorBody().toString());
@@ -1138,6 +1142,13 @@ public class PhoneImpl implements Phone {
         }
 
         return false;
+    }
+
+    private void setInputMediaParam(MediaOption option){
+        MediaOption.VideoExternalInputterParam param = option.getExternalInputterParam();
+        if (param != null) {
+            _mediaEngine.setInputMediaParam(new MediaInputterParam(param.frameRate, param.width, param.height));
+        }
     }
 
     static FacingMode toFacingMode(String s) {

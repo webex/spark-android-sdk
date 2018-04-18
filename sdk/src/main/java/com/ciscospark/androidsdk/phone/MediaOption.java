@@ -62,17 +62,6 @@ public class MediaOption {
         ABGR32Flip,
     }
 
-    public class VideoExternalInputterParam {
-        public int frameRate;
-        public int width;
-        public int height;
-        public VideoExternalInputterParam(int frameRate, int width, int height){
-            this.frameRate = frameRate;
-            this.width = width;
-            this.height = height;
-        }
-    }
-
     /**
      * Constructs an audio only media option.
      *
@@ -118,6 +107,27 @@ public class MediaOption {
             return new MediaOption(null, null, sharingView, true, true);
         }
         return new MediaOption(videoRenderViews.first, videoRenderViews.second, sharingView, true, true);
+    }
+
+    /**
+     * Constructs an audio/video and share media option.
+     *
+     * @param videoRenderViews Local video view and remote video view.
+     * @param sharingView      Share view for remote.
+     * @param inputterParam    The parameter of the external video inputter.
+     *                         If not null, need use {@link Call#inputMediaData} to input external video instead of camera.
+     *                         If null, device camera will be used for video call.
+     * @since 1.3.0-AR
+     */
+    public static MediaOption audioVideoSharingAR(@Nullable Pair<View, View> videoRenderViews, @Nullable View sharingView, @Nullable VideoExternalInputterParam inputterParam) {
+        MediaOption option;
+        if (videoRenderViews == null) {
+            option = new MediaOption(null, null, sharingView, true, true);
+        }else {
+            option = new MediaOption(videoRenderViews.first, videoRenderViews.second, sharingView, true, true);
+        }
+        option.setExternalInputterParam(inputterParam);
+        return option;
     }
 
     private View _remoteView;
@@ -188,8 +198,8 @@ public class MediaOption {
      * Set paramters for the external video inputter
      * @since 1.3.0-AR
      */
-    public void setExternalInputterParam(int frameRate, int width, int height){
-        _InputterParam = new VideoExternalInputterParam(frameRate, width, height);
+    private void setExternalInputterParam(VideoExternalInputterParam param){
+        _InputterParam = param;
     }
 
     /**

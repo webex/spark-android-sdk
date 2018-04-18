@@ -100,6 +100,7 @@ import com.ciscospark.androidsdk.phone.CallMembership;
 import com.ciscospark.androidsdk.phone.CallObserver;
 import com.ciscospark.androidsdk.phone.MediaOption;
 import com.ciscospark.androidsdk.phone.Phone;
+import com.ciscospark.androidsdk.phone.VideoExternalInputterParam;
 import com.ciscospark.androidsdk.utils.Utils;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import com.github.benoitdion.ln.Ln;
@@ -1145,7 +1146,7 @@ public class PhoneImpl implements Phone {
     }
 
     private void setInputMediaParam(MediaOption option){
-        MediaOption.VideoExternalInputterParam param = option.getExternalInputterParam();
+        VideoExternalInputterParam param = option.getExternalInputterParam();
         if (param != null) {
             _mediaEngine.setInputMediaParam(new MediaInputterParam(param.frameRate, param.width, param.height));
         }

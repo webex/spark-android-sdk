@@ -107,7 +107,7 @@ public class CallImpl implements Call {
         _isGroup = group;
 
         if (option != null) {
-            if (option.getLocalView() != null && option.getRemoteView() != null) {
+            if (option.getLocalView() != null || option.getRemoteView() != null) {
                 _videoRenderViews = new Pair<View, View>(option.getLocalView(), option.getRemoteView());
             } else {
                 _videoRenderViews = null;
@@ -132,7 +132,7 @@ public class CallImpl implements Call {
     void setMediaOption(@NonNull MediaOption option) {
         _option = option;
         if (option != null) {
-            if (option.getLocalView() != null && option.getRemoteView() != null) {
+            if (option.getLocalView() != null || option.getRemoteView() != null) {
                 _videoRenderViews = new Pair<View, View>(option.getLocalView(), option.getRemoteView());
             } else {
                 _videoRenderViews = null;
@@ -366,7 +366,7 @@ public class CallImpl implements Call {
     public void answer(@NonNull MediaOption option, @NonNull CompletionHandler<Void> callback) {
         _option = option;
         if (option != null) {
-            if (option.getLocalView() != null && option.getRemoteView() != null) {
+            if (option.getLocalView() != null || option.getRemoteView() != null) {
                 _videoRenderViews = new Pair<View, View>(option.getLocalView(), option.getRemoteView());
             } else {
                 _videoRenderViews = null;

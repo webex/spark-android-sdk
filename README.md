@@ -304,11 +304,10 @@ Here are some examples of how to use the Android SDK in your app.
 
     ```java
     Image.Plane[] planes = img.getPlanes();
-    if (planes[0].getBuffer() == null) {
-        break;
+    if (planes[0].getBuffer() != null) {
+        ByteBuffer buffer = planes[0].getBuffer();
+        call.inputMediaData(buffer, planes[0].getRowStride()/planes[0].getPixelStride(), img.getHeight(), MediaOption.VideoRawType.RGBA32);
     }
-    ByteBuffer buffer = planes[0].getBuffer();
-    call.inputMediaData(buffer, planes[0].getRowStride()/planes[0].getPixelStride(), img.getHeight(), MediaOption.VideoRawType.RGBA32);
     ``` 
 
     Following color types of video raw frame (not encoded) are supported.

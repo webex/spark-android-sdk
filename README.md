@@ -37,7 +37,7 @@ Assuming you already have an Android project, e.g. _MySparkApp_, for your Androi
 
     ```groovy
     dependencies { 
-        compile('com.ciscospark:androidsdk:1.3.0@aar', {
+        compile('com.ciscospark:androidsdk:1.3.0-AR@aar', {
             transitive = true
         })
     }
@@ -291,6 +291,51 @@ Here are some examples of how to use the Android SDK in your app.
     });
     
     ```
+
+9. Add external video input
+    To support inputting external video in a call instead of device camera, you need create a MediaOption of audioVideoSharingAR for the call when dial or answer it.
+
+    ```java
+    MediaOption.audioVideoSharingAR(new Pair<View, View>(localView, remoteView), sharingView, new VideoExternalInputterParam(30, 720, 1280));
+    ```
+
+    After the call has been connected, you can input the raw byte data frame by frame, which then will be encoded and sent to remote as your local video.
+
+    ```java
+    Image.Plane[] planes = img.getPlanes();
+    if (planes[0].getBuffer() == null) {
+        break;
+    }
+    ByteBuffer buffer = planes[0].getBuffer();
+    call.inputMediaData(buffer, planes[0].getRowStride()/planes[0].getPixelStride(), img.getHeight(), MediaOption.VideoRawType.RGBA32);
+    ``` 
+
+    Following color types of video raw frame (not encoded) are supported.
+    ```java
+    public enum VideoRawType{
+        VideoUnknown,
+        /*yuv color formats*/
+        I420,
+        YV12,
+        NV12,
+        NV21,
+        YUY2,
+        UYVY,
+        /*rgb color formats*/
+        RGB24,
+        BGR24,
+        RGB24Flip,
+        BGR24Flip,
+        RGBA32,
+        BGRA32,
+        ARGB32,
+        ABGR32,
+        RGBA32Flip,
+        BGRA32Flip,
+        ARGB32Flip,
+        ABGR32Flip,
+    }
+    ``` 
 ## Contribute
 
 Pull requests welcome. To suggest changes to the SDK, please fork this repository and submit a pull request with your changes. Your request will be reviewed by one of the project maintainers.

@@ -293,6 +293,7 @@ Here are some examples of how to use the Android SDK in your app.
     ```
 
 9. Add external video input
+
     To support inputting external video in a call instead of device camera, you need create a MediaOption of audioVideoSharingAR for the call when dial or answer it.
 
     ```java

@@ -79,6 +79,12 @@ public class WebhookClientImpl implements WebhookClient {
             _service.update(s, webhookId, Maps.makeMap("name", name, "targetUrl", targetUrl)), new ObjectCallback<>(handler));
     }
 
+    @Override
+    public void update(@NonNull String webhookId, @NonNull String name, @NonNull String targetUrl, @Nullable String secret, @Nullable String status, @NonNull CompletionHandler<Webhook> handler) {
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.update(s, webhookId, Maps.makeMap("name", name, "targetUrl", targetUrl, "secret", secret, "status", status)), new ObjectCallback<>(handler));
+    }
+
     public void delete(@NonNull String webhookId, @NonNull CompletionHandler<Void> handler) {
         ServiceBuilder.async(_authenticator, handler, s ->
             _service.delete(s, webhookId), new ObjectCallback<>(handler));

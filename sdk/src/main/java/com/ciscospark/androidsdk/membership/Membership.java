@@ -130,4 +130,12 @@ public class Membership {
         Gson gson = new Gson();
         return gson.toJson(this);
     }
+
+    /**
+     * @return The personOrgId name of the person
+     * @since 1.4
+     */
+    public String getPersonOrgId() {
+        return _personOrgId;
+    }
 }

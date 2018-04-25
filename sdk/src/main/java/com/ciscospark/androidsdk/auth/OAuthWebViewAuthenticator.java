@@ -71,7 +71,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
      */
     public OAuthWebViewAuthenticator(@NonNull String clientId, @NonNull String clientSecret, @NonNull String scope, @NonNull String redirectUri) {
         super();
-        _authenticator = new OAuthAuthenticator(clientId, clientSecret, redirectUri, scope);
+        _authenticator = new OAuthAuthenticator(clientId, clientSecret, scope, redirectUri);
         _launcher = new OAuthLauncher();
     }
 

@@ -143,7 +143,7 @@ public class OAuthAuthenticator implements Authenticator {
      */
     @Override
     public void getToken(@NonNull CompletionHandler<String> handler) {
-        checkNotNull(handler, "CompletionHandler is null");
+        checkNotNull(handler, "getToken: CompletionHandler is null");
         OAuth2Tokens token = getToken();
         Ln.d("GetToken: " + token + ", " + _provider);
         if (token == null) {
@@ -152,6 +152,18 @@ public class OAuthAuthenticator implements Authenticator {
         }
         if (!Checker.isEmpty(token.getAccessToken()) && token.getExpiresIn() > (System.currentTimeMillis() / 1000) + (15 * 60)) {
             handler.onComplete(ResultImpl.success(token.getAccessToken()));
+            return;
+        }
+        refreshToken(handler);
+    }
+
+    @Override
+    public void refreshToken(CompletionHandler<String> handler) {
+        checkNotNull(handler, "refreshToken: CompletionHandler is null");
+        OAuth2Tokens token = getToken();
+        Ln.d("refreshToken: " + token + ", " + _provider);
+        if (token == null) {
+            handler.onComplete(ResultImpl.error("Not authorized"));
             return;
         }
         _authService.refreshToken(_clientId, _clientSecret, token.getRefreshToken(), "refresh_token").enqueue(new Callback<OAuth2Tokens>() {

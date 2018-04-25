@@ -418,7 +418,7 @@ public class AppFeatures implements CoreFeatures {
 
     @Override
     public boolean isScreenSharingEnabled() {
-        return UIUtils.hasLollipop() && deviceRegistration.getFeatures().isAnyToggleEnabled(SCREEN_SHARING, SCREEN_SHARING_SPARKANS);
+        return UIUtils.hasLollipop();// && deviceRegistration.getFeatures().isAnyToggleEnabled(SCREEN_SHARING, SCREEN_SHARING_SPARKANS);
     }
 
     @Override

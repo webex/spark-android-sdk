@@ -71,7 +71,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
      */
     public OAuthWebViewAuthenticator(@NonNull String clientId, @NonNull String clientSecret, @NonNull String scope, @NonNull String redirectUri) {
         super();
-        _authenticator = new OAuthAuthenticator(clientId, clientSecret, redirectUri, scope);
+        _authenticator = new OAuthAuthenticator(clientId, clientSecret, scope, redirectUri);
         _launcher = new OAuthLauncher();
     }
 
@@ -116,6 +116,11 @@ public class OAuthWebViewAuthenticator implements Authenticator {
     @Override
     public void getToken(CompletionHandler<String> handler) {
         _authenticator.getToken(handler);
+    }
+
+    @Override
+    public void refreshToken(CompletionHandler<String> handler) {
+        _authenticator.refreshToken(handler);
     }
 
     private String buildCodeGrantUrl() {

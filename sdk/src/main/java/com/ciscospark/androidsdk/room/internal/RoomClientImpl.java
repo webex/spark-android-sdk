@@ -61,33 +61,28 @@ public class RoomClientImpl implements RoomClient {
     }
 
     public void list(@Nullable String teamId, int max, @Nullable Room.RoomType type, @Nullable SortBy sortBy, @NonNull CompletionHandler<List<Room>> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.list(s, teamId, type != null ? type.name() : null, sortBy != null ? sortBy.name().toLowerCase() : null, max <= 0 ? null : max).enqueue(new ListCallback<Room>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.list(s, teamId, type != null ? type.name() : null, sortBy != null ? sortBy.name().toLowerCase() : null, max <= 0 ? null : max), new ListCallback<Room>(handler));
     }
 
     public void create(@NonNull String title, @Nullable String teamId, @NonNull CompletionHandler<Room> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.create(s, Maps.makeMap("title", title, "teamId", teamId)).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.create(s, Maps.makeMap("title", title, "teamId", teamId)), new ObjectCallback<>(handler));
     }
 
     public void get(@NonNull String roomId, @NonNull CompletionHandler<Room> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, roomId).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.get(s, roomId), new ObjectCallback<>(handler));
     }
 
     public void update(@NonNull String roomId, @NonNull String title, @NonNull CompletionHandler<Room> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.update(s, roomId, Maps.makeMap("title", title)).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.update(s, roomId, Maps.makeMap("title", title)), new ObjectCallback<>(handler));
     }
 
     public void delete(@NonNull String roomId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.delete(s, roomId).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s ->
+            _service.delete(s, roomId), new ObjectCallback<>(handler));
     }
 
     private interface RoomService {

@@ -26,16 +26,14 @@ import java.util.List;
 
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.internal.ResultImpl;
-
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
  * Created by zhiyuliu on 02/09/2017.
  */
 
-public class ListCallback<T> implements Callback<ListBody<T>> {
+public class ListCallback<T> extends ListenerCallback<ListBody<T>> {
 
     private CompletionHandler<List<T>> _handler;
 
@@ -47,7 +45,7 @@ public class ListCallback<T> implements Callback<ListBody<T>> {
     public void onResponse(Call<ListBody<T>> call, Response<ListBody<T>> response) {
         if (response.isSuccessful()) {
             _handler.onComplete(ResultImpl.success(response.body().getItems()));
-        } else {
+        } else if (!checkUnauthError(response)) {
             _handler.onComplete(ResultImpl.error(response));
         }
     }
@@ -56,5 +54,4 @@ public class ListCallback<T> implements Callback<ListBody<T>> {
     public void onFailure(Call<ListBody<T>> call, Throwable t) {
         _handler.onComplete(ResultImpl.error(t));
     }
-
 }

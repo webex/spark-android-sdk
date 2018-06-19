@@ -27,9 +27,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Bundle;
 import android.view.WindowManager;
 
-class RotationHandler {
+public class RotationHandler {
     static BroadcastReceiver _receiver;
 
     static class RotationBroadcastReceiver extends BroadcastReceiver {
@@ -58,6 +59,18 @@ class RotationHandler {
         if (_receiver != null) {
             context.unregisterReceiver(_receiver);
             _receiver = null;
+        }
+    }
+    
+    public static void setScreenshotPermission(final Intent permissionIntent){
+        if (_receiver != null) {
+            ((RotationBroadcastReceiver)_receiver)._phoneImpl.setScreenshotPermission(permissionIntent);
+        }
+    }
+
+    public static void makeCall(Bundle data, boolean permission){
+        if (_receiver != null) {
+            ((RotationBroadcastReceiver)_receiver)._phoneImpl.makeCall(data, permission);
         }
     }
 }

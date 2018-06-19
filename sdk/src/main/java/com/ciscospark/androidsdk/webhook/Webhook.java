@@ -59,6 +59,9 @@ public class Webhook {
     @SerializedName("created")
     private Date _created;
 
+    @SerializedName("status")
+    private String _status;
+
     @Override
     public String toString() {
         Gson gson = new Gson();
@@ -127,5 +130,13 @@ public class Webhook {
      */
     public Date getCreated() {
         return _created;
+    }
+
+    /**
+     * @return The status of the webhook. Use <code>active</code> to reactivate a disabled webhook.
+     * @since 1.4
+     */
+    public String getStatus() {
+        return _status;
     }
 }

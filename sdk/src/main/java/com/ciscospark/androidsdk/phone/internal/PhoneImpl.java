@@ -32,7 +32,6 @@ import javax.inject.Inject;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.bluetooth.BluetoothClass;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;

@@ -32,6 +32,7 @@ import javax.inject.Inject;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.bluetooth.BluetoothClass;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -891,19 +892,20 @@ public class PhoneImpl implements Phone {
     public void onEventMainThread(ParticipantSelfChangedEvent event) {
 	    Ln.i("ParticipantSelfChangedEvent is received " + event.getLocusKey());
 	    CallImpl call = _calls.get(event.getLocusKey());
-	    Locus locus = _callControlService.getLocus(event.getLocusKey());
-	    if (call != null && locus != null
-		    && locus.getSelf().getDevices() != null) {
-		    List deviceList = locus.getSelf().getDevices();
-		    if (call.getStatus() == Call.CallStatus.CONNECTED && !isJoinedFromThisDevice(deviceList)) {
+	    Locus locus = event.getLocus();
+	    if (call != null && locus != null && locus.getSelf() != null) {
+            Uri deviceUrl = locus.getSelf().getDeviceUrl();
+            Ln.d("ParticipantSelfChangedEvent device url: " + deviceUrl + "  self: " + _device.getUrl()
+                + "  state: " + locus.getSelf().getState());
+		    if (call.getStatus() == Call.CallStatus.CONNECTED && !isJoinedFromThisDevice(locus.getSelf().getDevices())) {
 			    Ln.d("Local device left locusKey: " + event.getLocusKey());
 			    if (call.getHangupCallback() != null) {
 				    call.getHangupCallback().onComplete(ResultImpl.success(null));
 			    }
 			    _removeCall(new CallObserver.LocalLeft(call));
 		    } else if (call.getStatus() != Call.CallStatus.CONNECTED
-			    && isJoinedFromOtherDevice(deviceList)
-			    && !isJoinedFromThisDevice(deviceList)) {
+			    && deviceUrl != null && !deviceUrl.equals(_device.getUrl())
+                && locus.getSelf().getState() == LocusParticipant.State.JOINED) {
 			    com.cisco.spark.android.callcontrol.model.Call _call = _callControlService.getCall(event.getLocusKey());
 			    if (_call == null || !_call.isActive()) {
 				    Ln.d("other device connected locusKey: " + event.getLocusKey());
@@ -912,8 +914,8 @@ public class PhoneImpl implements Phone {
 				    Ln.d("Self device has already connected, ignore other device connect");
 			    }
 		    } else if (call.getStatus() != Call.CallStatus.CONNECTED
-			    && !isDeclinedFromThisDevice(deviceList)
-			    && isDeclinedFromOtherDevice(deviceList)) {
+			    && deviceUrl != null && !deviceUrl.equals(_device.getUrl())
+                && locus.getSelf().getState() == LocusParticipant.State.DECLINED) {
 			    com.cisco.spark.android.callcontrol.model.Call _call = _callControlService.getCall(event.getLocusKey());
 			    if (_call == null || !_call.isActive()) {
 				    Ln.d("other device declined locusKey: " + event.getLocusKey());
@@ -1314,60 +1316,6 @@ public class PhoneImpl implements Phone {
 
         return false;
     }
-
-    private boolean isJoinedFromOtherDevice(List<LocusParticipantDevice> devices) {
-        if (_device == null || _device.getUrl() == null) {
-            Ln.w("isJoinedFromOtherDevice: self device is null, register device first.");
-            return false;
-        }
-
-        for (LocusParticipantDevice device : devices) {
-            if (!device.getUrl().equals(_device.getUrl())
-                    && device.getState() == LocusParticipant.State.JOINED) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-	private boolean isDeclinedFromThisDevice(List<LocusParticipantDevice> devices) {
-		if (_device == null || _device.getUrl() == null) {
-			Ln.w("isDeclinedFromThisDevice: self device is null, register device first.");
-			return false;
-		}
-		Ln.d("isDeclinedFromThisDevice: " + devices.size());
-		for (LocusParticipantDevice device : devices) {
-			Ln.d("isDeclinedFromThisDevice device: " + device.getUrl() + "  state: " + device.getState()
-				+ "  self: " + _device.getUrl());
-			if (device.getUrl().equals(_device.getUrl())
-				&& device.getState() == LocusParticipant.State.DECLINED) {
-				Ln.d("isDeclinedFromThisDevice true");
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	private boolean isDeclinedFromOtherDevice(List<LocusParticipantDevice> devices) {
-		if (_device == null || _device.getUrl() == null) {
-			Ln.w("isDeclinedFromOtherDevice: self device is null, register device first.");
-			return false;
-		}
-		Ln.d("isDeclinedFromOtherDevice: " + devices.size());
-		for (LocusParticipantDevice device : devices) {
-			Ln.d("isDeclinedFromOtherDevice device: " + device.getUrl() + "  state: " + device.getState()
-				+ "  self: " + _device.getUrl());
-			if (!device.getUrl().equals(_device.getUrl())
-				&& device.getState() == LocusParticipant.State.DECLINED) {
-				Ln.d("isDeclinedFromOtherDevice true");
-				return true;
-			}
-		}
-
-		return false;
-	}
 	
 	static FacingMode toFacingMode(String s) {
         if (MediaEngine.WME_BACK_CAMERA.equals(s)) {

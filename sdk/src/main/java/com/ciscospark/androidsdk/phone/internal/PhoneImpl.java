@@ -39,6 +39,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Base64;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import com.cisco.spark.android.authenticator.AuthenticatedUserTask;
 import com.cisco.spark.android.callcontrol.CallContext;
@@ -110,6 +112,8 @@ import com.ciscospark.androidsdk.utils.Utils;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import com.ciscospark.androidsdk_commlib.SDKCommon;
 import com.github.benoitdion.ln.Ln;
+import com.webex.wseclient.WseSurfaceView;
+
 import me.helloworld.utils.Checker;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.NoSubscriberEvent;
@@ -1213,11 +1217,101 @@ public class PhoneImpl implements Phone {
         }
         if (call.getOption() != null) {
             if (call.getOption().hasVideo() && call.getVideoRenderViews() != null) {
-                _callControlService.setRemoteWindow(key, call.getVideoRenderViews().second);
                 _callControlService.setPreviewWindow(key, call.getVideoRenderViews().first);
+                if (call.getVideoRenderViews().first instanceof SurfaceView){
+                    ((SurfaceView)call.getVideoRenderViews().first).getHolder().addCallback(new SurfaceHolder.Callback() {
+                        @Override
+                        public void surfaceCreated(SurfaceHolder surfaceHolder) {
+                            Ln.d("preview surfaceCreated !!!");
+                            if (!_callControlService.isPreviewWindowAttached(key, call.getVideoRenderViews().first))
+                                _callControlService.setPreviewWindow(key, call.getVideoRenderViews().first);
+                        }
+
+                        @Override
+                        public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+                            Ln.d("preview surfaceChanged !!!");
+                            //_callControlService.updatePreviewWindow(key, call.getVideoRenderViews().first);
+                        }
+
+                        @Override
+                        public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+                            Ln.d("preview surfaceDestroyed !!!");
+                            _registerTimer.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    _callControlService.removePreviewWindow(key, call.getVideoRenderViews().first);
+                                }
+                            });
+                        }
+                    });
+                }
+
+                _callControlService.setRemoteWindow(key, call.getVideoRenderViews().second);
+                if (call.getVideoRenderViews().second instanceof SurfaceView){
+                    ((SurfaceView)call.getVideoRenderViews().second).getHolder().addCallback(new SurfaceHolder.Callback() {
+                        @Override
+                        public void surfaceCreated(SurfaceHolder surfaceHolder) {
+                            Ln.d("remote surfaceCreated !!!");
+                            if (!_callControlService.isRemoteWindowAttached(key, call.getVideoRenderViews().second))
+                                _callControlService.setRemoteWindow(key, call.getVideoRenderViews().second);
+                        }
+
+                        @Override
+                        public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+                            Ln.d("remote surfaceChanged !!!");
+                            //_callControlService.updateRemoteWindow(key, call.getVideoRenderViews().second);
+                        }
+
+                        @Override
+                        public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+                            Ln.d("remote surfaceDestroyed !!!");
+                            _registerTimer.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    _callControlService.removeRemoteWindow(key, call.getVideoRenderViews().second);
+                                }
+                            });
+                        }
+                    });
+                }
             }
             if (call.getOption().hasSharing() && call.getSharingRenderView() != null) {
                 _callControlService.setShareWindow(key, call.getSharingRenderView());
+                if (call.getSharingRenderView() instanceof SurfaceView){
+                    ((SurfaceView)call.getSharingRenderView()).getHolder().addCallback(new SurfaceHolder.Callback() {
+                        @Override
+                        public void surfaceCreated(SurfaceHolder surfaceHolder) {
+                            Ln.d("share surfaceCreated !!!");
+                            //if (!_callControlService.isShareWindowAttached(key, call.getSharingRenderView())) {
+                                _registerTimer.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        _callControlService.setShareWindow(key, call.getSharingRenderView());
+                                    }
+                                }, 100);
+                            //}
+                        }
+
+                        @Override
+                        public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+                            Ln.d("share surfaceChanged !!!");
+                            //_callControlService.updateShareWindow(key, call.getSharingRenderView());
+                        }
+
+                        @Override
+                        public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+                            Ln.d("share surfaceDestroyed !!!");
+                            if (_callControlService.isShareRendered()) {
+                                _registerTimer.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        _callControlService.removeShareWindow(key);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
             }
             _callControlService.updateMediaSession(_callControlService.getCall(call.getKey()), mediaOptionToMediaDirection(call.getOption()));
         }

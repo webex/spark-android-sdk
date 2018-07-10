@@ -24,6 +24,7 @@ package com.ciscospark.androidsdk.message;
 
 import java.util.List;
 
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -44,7 +45,7 @@ public interface MessageClient {
      * @param roomId          The identifier of the room.
      * @param before          If not nil, only list messages sent only before this date and time, in ISO8601 format.
      * @param beforeMessage   If not nil, only list messages sent only before this message by id.
-     * @param mentionedPeople If not nil, only list messages metion people.
+     * @param mentionedPeople If not nil, only list messages mention people.
      * @param max             The maximum number of messages in the response.
      * @param handler         A closure to be executed once the request has finished.
      * @since 0.1
@@ -63,7 +64,51 @@ public interface MessageClient {
      * @param handler     A closure to be executed once the request has finished.
      * @since 0.1
      */
-    void post(@Nullable String roomId, @Nullable String personId, @Nullable String personEmail, @Nullable String text, @Nullable String markdown, @Nullable String[] files, @NonNull CompletionHandler<Message> handler);
+    void post(@Nullable String roomId,
+              @Nullable String personId,
+              @Nullable String personEmail,
+              @Nullable String text,
+              @Nullable String markdown,
+              @Nullable String[] files,
+              @NonNull CompletionHandler<Message> handler);
+
+    /**
+     * @param idOrEmail     The identifier of the room or person or person email where the message is to be posted.
+     * @param text          The plain text message to be posted to the room.
+     * @param mentions      Mention people, if post to a person, this param should be null
+     * @param files         Files to be posted
+     * @param handler       A closure to be executed once the request has finished.
+     * @since 1.4.0
+     */
+    void post(@NonNull String idOrEmail,
+              @Nullable String text,
+              @Nullable Mention[] mentions,
+              @Nullable LocalFile[] files,
+              @NonNull CompletionHandler<Message> handler);
+
+    /**
+     * @param observer
+     * @since 1.4.0
+     */
+    void setMessageObserver(MessageObserver observer);
+
+    /**
+     * @param remoteFile        The RemoteFile object need to be downloaded.
+     * @param to                The local file directory for saving downloaded file.
+     * @param progressHandler   The download progress indicator.
+     * @param completionHandler A closure to be executed when download completed.
+     * @since 1.4.0
+     */
+    void downloadFile(RemoteFile remoteFile, String to, ProgressHandler progressHandler, CompletionHandler<Uri> completionHandler);
+
+    /**
+     * @param remoteFile        The RemoteFile object need to be downloaded.
+     * @param to                The local file directory for saving downloaded file.
+     * @param progressHandler   The download progress indicator.
+     * @param completionHandler A closure to be executed when download completed.
+     * @since 1.4.0
+     */
+    void downloadThumbnail(RemoteFile remoteFile, String to, ProgressHandler progressHandler, CompletionHandler<Uri> completionHandler);
 
     /**
      * Retrieves the details for a message by message Id.
@@ -83,4 +128,11 @@ public interface MessageClient {
      */
     void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler);
 
+    /**
+     * Progress indicator interface
+     * @since 1.4.0
+     */
+    interface ProgressHandler {
+        void onProgress(double percentage);
+    }
 }

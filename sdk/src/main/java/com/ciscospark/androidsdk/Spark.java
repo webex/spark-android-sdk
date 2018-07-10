@@ -84,6 +84,8 @@ public class Spark {
 
     private PhoneImpl _phone;
 
+    private MessageClientImpl _message;
+
 //    private LogCaptureUtil _logCapture;
 
     @Inject
@@ -105,12 +107,13 @@ public class Spark {
     public Spark(Application application, Authenticator authenticator) {
         _authenticator = authenticator;        
         _common = new SDKCommon(application, APP_NAME, APP_VERSION);
-        _common.addInjectable(this.getClass(), authenticator.getClass(), OAuthAuthenticator.class, PhoneImpl.class, Call.class);
+        _common.addInjectable(this.getClass(), authenticator.getClass(), OAuthAuthenticator.class, PhoneImpl.class, Call.class, MessageClientImpl.class);
         _common.create();
         _common.inject(this);
         _common.inject(_authenticator);
         //_logCapture = new LogCaptureUtil(application.getApplicationContext());
         _phone = new PhoneImpl(application.getApplicationContext(), _authenticator, _common);
+        _message = new MessageClientImpl(application.getApplicationContext(), _authenticator, _common);
         setLogLevel(LogLevel.DEBUG);
         Ln.i(_userAgentProvider.get());
         Ln.i(Utils.versionInfo());
@@ -168,7 +171,7 @@ public class Spark {
      * @since 0.1
      */
     public MessageClient messages() {
-        return new MessageClientImpl(this._authenticator);
+        return _message;
     }
 
     /**

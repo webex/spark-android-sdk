@@ -170,37 +170,66 @@ public class MessageClientImpl implements MessageClient {
         });
     }
 
+    @Override
+    public void post(@NonNull String idOrEmail, @Nullable String text, @Nullable Mention[] mentions, @Nullable LocalFile[] files, @NonNull CompletionHandler<Message> handler) {
+        HydraId object = HydraId.decode(idOrEmail);
+        if (object.type == null) {
+            postToPerson(idOrEmail, text, files, handler);
+        } else if (object.type == HydraId.HydraIdType.ROOM_ID) {
+            postToRoom(object.id, text, mentions, files, handler);
+        } else if (object.type == HydraId.HydraIdType.PEOPLE_ID) {
+            postToPerson(object.id, text, files, handler);
+        }
+    }
+
+    @Override
+    public void get(@NonNull String messageId, @NonNull CompletionHandler<Message> handler) {
+        ServiceBuilder.async(_authenticator, handler, s -> {
+            _service.get(s, messageId).enqueue(new ObjectCallback<>(handler));
+        });
+    }
+
+    @Override
+    public void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler) {
+        ServiceBuilder.async(_authenticator, handler, s -> {
+            _service.delete(s, messageId).enqueue(new ObjectCallback<>(handler));
+        });
+    }
+
+    @Override
+    public void downloadFile(RemoteFile file, String to, ProgressHandler progressHandler, CompletionHandler<Uri> handler) {
+        download(((RemoteFileImpl) file).getFile(), to, progressHandler, handler);
+    }
+
+    @Override
+    public void downloadThumbnail(RemoteFile file, String to, ProgressHandler progressHandler, CompletionHandler<Uri> handler) {
+        download(((RemoteFileImpl) file).getFile().getImage(), to, progressHandler, handler);
+    }
+
     private void postComment(String conversationId, Comment comment) {
         PostCommentOperation postCommentOperation = new PostCommentOperation(injector, conversationId, comment);
         operations.submit(postCommentOperation);
     }
 
-    private void setLocalThumbnail(File modelFile, LocalFile.Thumbnail thumbnail) {
-        java.io.File thumbFile = new java.io.File(thumbnail.path);
-        if (!thumbFile.exists() || !thumbFile.isFile()) {
-            return;
-        }
-        Image newThumb = new Image(Uri.fromFile(thumbFile), thumbnail.width, thumbnail.height, true);
-        modelFile.setImage(newThumb);
-    }
-
     private File createContentFile(LocalFile contentFile, String conversationId, ContentManager contentManager, DatabaseProvider db) {
         try {
             Uri contentUri = Uri.fromFile(contentFile.getFile());
-            ContentDataCacheRecord ret = contentManager.addUploadedContent(new java.io.File(new URI(contentUri.toString())), contentUri, ConversationContract.ContentDataCacheEntry.Cache.MEDIA);
-            if (ret == null) {
-                return null;
-            }
+            contentManager.addUploadedContent(new java.io.File(new URI(contentUri.toString())), contentUri, ConversationContract.ContentDataCacheEntry.Cache.MEDIA);
 
             File modelFile = new File();
             modelFile.setUri(contentUri);
             modelFile.setMimeType(MimeUtils.getMimeType(contentUri.toString()));
             modelFile.setDisplayName(contentUri.getLastPathSegment());
-            //MimeUtils.ContentType type = MimeUtils.getContentTypeByFilename(contentUri.getLastPathSegment());
             if (contentFile.thumbnail != null) {
-                setLocalThumbnail(modelFile, contentFile.thumbnail);
+                java.io.File thumbFile = new java.io.File(contentFile.thumbnail.path);
+                if (thumbFile.exists() && thumbFile.isFile()) {
+                    Image newThumb = new Image(Uri.fromFile(thumbFile), contentFile.thumbnail.width, contentFile.thumbnail.height, true);
+                    modelFile.setImage(newThumb);
+                }
             }
-            /* Generate thumbnail automatically
+            /* Generate thumbnail automatically */
+            /*
+            MimeUtils.ContentType type = MimeUtils.getContentTypeByFilename(contentUri.getLastPathSegment());
             if (type == MimeUtils.ContentType.IMAGE || type == MimeUtils.ContentType.VIDEO) {
                 java.io.File thumbDir = contentManager.getContentDirectory(ConversationContract.ContentDataCacheEntry.Cache.THUMBNAIL, modelFile.getUrl());
                 java.io.File thumbFile = new java.io.File(thumbDir, modelFile.getUrl().getLastPathSegment() + ".png");
@@ -259,7 +288,6 @@ public class MessageClientImpl implements MessageClient {
             postComment(conversationId, comment);
             runOnUiThread(() -> handler.onComplete(ResultImpl.success(null)));
         }
-
     }
 
     private void createMention(Comment comment, Mention[] mentions) {
@@ -268,7 +296,7 @@ public class MessageClientImpl implements MessageClient {
         for (Mention m : mentions) {
             if (m instanceof Mention.MentionPerson) {
                 HydraId personId = HydraId.decode(((Mention.MentionPerson) m).personId);
-                if (personId != null && personId.type != null && personId.type.equals(HydraId.HydraIdType.PEOPLE_ID)) {
+                if (personId.type != null && personId.type.equals(HydraId.HydraIdType.PEOPLE_ID)) {
                     Person person = new Person(personId.id);
                     mentionedPersons.addItem(person);
                 }
@@ -313,21 +341,6 @@ public class MessageClientImpl implements MessageClient {
         postContentOrComment(roomId, files, comment, handler);
     }
 
-    @Override
-    public void post(@NonNull String idOrEmail,
-                     @Nullable String text,
-                     @Nullable Mention[] mentions,
-                     @Nullable LocalFile[] files,
-                     @NonNull CompletionHandler<Message> handler) {
-        HydraId object = HydraId.decode(idOrEmail);
-        if (object.type == null) {
-            postToPerson(idOrEmail, text, files, handler);
-        } else if (object.type == HydraId.HydraIdType.ROOM_ID) {
-            postToRoom(object.id, text, mentions, files, handler);
-        } else if (object.type == HydraId.HydraIdType.PEOPLE_ID) {
-            postToPerson(object.id, text, files, handler);
-        }
-    }
 
     private class RemoteFileImpl extends RemoteFile {
         private File file;
@@ -368,13 +381,14 @@ public class MessageClientImpl implements MessageClient {
         private static final List typeString = Arrays.asList("MESSAGE", "PEOPLE", "ROOM");
 
         // decode hydra id
+        @NonNull
         private static HydraId decode(String hydraId) {
             HydraId object = new HydraId();
             object.hydraId = hydraId;
             try {
                 String decode_str = new String(Base64.decode(hydraId, Base64.URL_SAFE), "UTF-8");
                 if (TextUtils.isEmpty(decode_str)) {
-                    return null;
+                    return object;
                 }
                 String[] subs = decode_str.split("/");
                 object.id = subs[subs.length - 1];
@@ -424,6 +438,9 @@ public class MessageClientImpl implements MessageClient {
     private void formMessageMentions(Message message, Activity activity) {
         if (activity.getObject() instanceof Mentionable) {
             Mentionable mentionable = (Mentionable) activity.getObject();
+            if (mentionable.getMentions() == null) {
+                return;
+            }
             ArrayList<String> arrayList = new ArrayList<>();
             for (Person p : mentionable.getMentions().getItems()) {
                 arrayList.add(HydraId.encode(p.getId(), HydraId.HydraIdType.PEOPLE_ID));
@@ -452,15 +469,19 @@ public class MessageClientImpl implements MessageClient {
     private void processorActivity(Activity activity) {
         Ln.v("activity processed: " + activity.toString());
         MessageObserver.MessageEvent event;
-        if (activity.getVerb().equals("post") || activity.getVerb().equals("share")) {
-            Message message = formMessage(activity);
-            event = new MessageObserver.MessageArrived(message);
-        } else if (activity.getVerb().equals("delete")) {
-            String messageId = HydraId.encode(activity.getId(), HydraId.HydraIdType.MESSAGE_ID);
-            event = new MessageObserver.MessageDeleted(messageId);
-        } else {
-            Ln.e("unknown verb " + activity.getVerb());
-            return;
+        switch (activity.getVerb()) {
+            case "post":
+            case "share":
+                Message message = formMessage(activity);
+                event = new MessageObserver.MessageArrived(message);
+                break;
+            case "delete":
+                String messageId = HydraId.encode(activity.getId(), HydraId.HydraIdType.MESSAGE_ID);
+                event = new MessageObserver.MessageDeleted(messageId);
+                break;
+            default:
+                Ln.e("unknown verb " + activity.getVerb());
+                return;
         }
         if (_observer != null) {
             runOnUiThread(() -> _observer.onEvent(event));
@@ -500,16 +521,6 @@ public class MessageClientImpl implements MessageClient {
                 t.cancel(false);
             }
         }
-    }
-
-    @Override
-    public void downloadFile(RemoteFile file, String to, ProgressHandler progressHandler, CompletionHandler<Uri> handler) {
-        download(((RemoteFileImpl) file).getFile(), to, progressHandler, handler);
-    }
-
-    @Override
-    public void downloadThumbnail(RemoteFile file, String to, ProgressHandler progressHandler, CompletionHandler<Uri> handler) {
-        download(((RemoteFileImpl) file).getFile().getImage(), to, progressHandler, handler);
     }
 
     private void download(ContentReference reference, String to, ProgressHandler progressHandler, CompletionHandler<Uri> completionHandler) {
@@ -573,19 +584,6 @@ public class MessageClientImpl implements MessageClient {
                 action, new ContentDownloadMonitor(), callback);
     }
 
-    @Override
-    public void get(@NonNull String messageId, @NonNull CompletionHandler<Message> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, messageId).enqueue(new ObjectCallback<>(handler));
-        });
-    }
-
-    @Override
-    public void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.delete(s, messageId).enqueue(new ObjectCallback<>(handler));
-        });
-    }
 
     private interface MessageService {
         @GET("messages")

@@ -22,6 +22,20 @@
 
 package com.ciscospark.androidsdk.message.internal;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
+
 import android.content.Context;
 import android.net.Uri;
 import android.os.Handler;
@@ -29,7 +43,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Base64;
-
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.content.ContentUploadMonitor;
 import com.cisco.spark.android.core.Injector;
@@ -74,25 +87,8 @@ import com.ciscospark.androidsdk.utils.http.ObjectCallback;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
 import com.ciscospark.androidsdk_commlib.SDKCommon;
 import com.github.benoitdion.ln.Ln;
-
-import org.greenrobot.eventbus.EventBus;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Inject;
-
 import me.helloworld.utils.collection.Maps;
+import org.greenrobot.eventbus.EventBus;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -182,16 +178,12 @@ public class MessageClientImpl implements MessageClient {
 
     @Override
     public void get(@NonNull String messageId, @NonNull CompletionHandler<Message> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.get(s, messageId).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s -> _service.get(s, messageId), new ObjectCallback<>(handler));
     }
 
     @Override
     public void delete(@NonNull String messageId, @NonNull CompletionHandler<Void> handler) {
-        ServiceBuilder.async(_authenticator, handler, s -> {
-            _service.delete(s, messageId).enqueue(new ObjectCallback<>(handler));
-        });
+        ServiceBuilder.async(_authenticator, handler, s -> _service.delete(s, messageId), new ObjectCallback<>(handler));
     }
 
     @Override

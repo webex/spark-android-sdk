@@ -1,5 +1,7 @@
 package com.ciscospark.androidsdk.message;
 
+import com.cisco.spark.android.util.FileUtils;
+
 import java.io.File;
 
 /**
@@ -28,7 +30,10 @@ public class LocalFile {
     public Thumbnail thumbnail;
 
     public LocalFile(File file) {
-        _file = file;
+        this._file = file;
+        this.name = file.getName();
+        this.size = file.length();
+        this.path = file.getPath();
     }
 
     public File getFile() {

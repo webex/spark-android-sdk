@@ -80,6 +80,9 @@ public class Room {
     @SerializedName("created")
     private Date _created;
 
+    @SerializedName("sipAddress")
+    private String _sipAddress;
+
     @Override
     public String toString() {
         Gson gson = new Gson();
@@ -141,6 +144,12 @@ public class Room {
     public Date getCreated() {
         return _created;
     }
+
+    /**
+     * @return The sipAddress that this room associated with.
+     * @since 1.4
+     */
+    public String getSipAddress() {
+        return _sipAddress;
+    }
 }
-
-

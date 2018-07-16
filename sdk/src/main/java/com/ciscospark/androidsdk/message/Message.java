@@ -24,6 +24,7 @@ package com.ciscospark.androidsdk.message;
 
 
 import java.util.Date;
+import java.util.List;
 
 import com.ciscospark.androidsdk.room.Room;
 import com.google.gson.Gson;
@@ -35,6 +36,54 @@ import com.google.gson.annotations.SerializedName;
  * @since 0.1
  */
 public class Message {
+
+    public void setId(String id) {
+        this._id = id;
+    }
+
+    public void setPersonId(String personId) {
+        this._personId = personId;
+    }
+
+    public void setPersonEmail(String personEmail) {
+        this._personEmail = personEmail;
+    }
+
+    public void setRoomId(String roomId) {
+        this._roomId = roomId;
+    }
+
+    public void setRoomType(Room.RoomType roomType) {
+        this._roomType = roomType;
+    }
+
+    public void setText(String text) {
+        this._text = text;
+    }
+
+    public void setMarkdown(String markdown) {
+        this._markdown = markdown;
+    }
+
+    public void setToPersonId(String toPersonId) {
+        this._toPersonId = toPersonId;
+    }
+
+    public void setToPersonEmail(String toPersonEmail) {
+        this._toPersonEmail = toPersonEmail;
+    }
+
+    public void setMentionedPeople(String[] mentionedPeople) {
+        this._mentionedPeople = mentionedPeople;
+    }
+
+    public void setFiles(String[] files) {
+        this._files = files;
+    }
+
+    public void setCreated(Date created) {
+        this._created = created;
+    }
 
     @SerializedName("id")
     private String _id;
@@ -71,6 +120,18 @@ public class Message {
 
     @SerializedName("created")
     private Date _created;
+
+    private transient List<RemoteFile> _remoteFiles;
+
+    public boolean isSelfMentioned;
+
+    public List<RemoteFile> getRemoteFiles() {
+        return _remoteFiles;
+    }
+
+    public void setRemoteFiles(List<RemoteFile> _remoteFiles) {
+        this._remoteFiles = _remoteFiles;
+    }
 
     /**
      * @return The identifier of this message.

@@ -29,14 +29,12 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.webkit.WebView;
-
 import com.cisco.spark.android.core.Injector;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.auth.internal.OAuthLauncher;
 import com.ciscospark.androidsdk.internal.ResultImpl;
-import com.ciscospark.androidsdk.internal.SparkInjector;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
-
+import com.ciscospark.androidsdk_commlib.AfterInjected;
 import me.helloworld.utils.Checker;
 
 /**
@@ -71,7 +69,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
      */
     public OAuthWebViewAuthenticator(@NonNull String clientId, @NonNull String clientSecret, @NonNull String scope, @NonNull String redirectUri) {
         super();
-        _authenticator = new OAuthAuthenticator(clientId, clientSecret, redirectUri, scope);
+        _authenticator = new OAuthAuthenticator(clientId, clientSecret, scope, redirectUri);
         _launcher = new OAuthLauncher();
     }
 
@@ -118,6 +116,11 @@ public class OAuthWebViewAuthenticator implements Authenticator {
         _authenticator.getToken(handler);
     }
 
+    @Override
+    public void refreshToken(CompletionHandler<String> handler) {
+        _authenticator.refreshToken(handler);
+    }
+    
     private String buildCodeGrantUrl() {
         Uri.Builder builder = Uri.parse(ServiceBuilder.HYDRA_URL).buildUpon();
         builder.appendPath("authorize")
@@ -129,7 +132,7 @@ public class OAuthWebViewAuthenticator implements Authenticator {
         return builder.toString();
     }
 
-    @SparkInjector.AfterInjected
+    @AfterInjected
     private void afterInjected() {
         Log.d(TAG, "Inject authenticator after self injected");
         _injector.inject(_authenticator);

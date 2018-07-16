@@ -25,24 +25,21 @@ package com.ciscospark.androidsdk.auth;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.inject.Inject;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Base64;
-
 import com.cisco.spark.android.authenticator.ApiTokenProvider;
 import com.cisco.spark.android.authenticator.OAuth2Tokens;
-import com.cisco.spark.android.core.AuthenticatedUser;
-import com.cisco.spark.android.sync.ActorRecord;
+import com.cisco.spark.android.model.AuthenticatedUser;
+import com.cisco.spark.android.model.conversation.ActorRecord;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.internal.ResultImpl;
-import com.ciscospark.androidsdk.internal.SparkInjector;
 import com.ciscospark.androidsdk.utils.http.ServiceBuilder;
+import com.ciscospark.androidsdk_commlib.AfterInjected;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-
 import me.helloworld.utils.Converter;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -113,7 +110,7 @@ public class JWTAuthenticator implements Authenticator {
      */
     @Override
     public void getToken(@NonNull CompletionHandler<String> handler) {
-        checkNotNull(handler, "CompletionHandler should not be null");
+        checkNotNull(handler, "getToken: CompletionHandler should not be null");
         String jwt = getUnexpiredJwt();
         if (jwt == null) {
             handler.onComplete(ResultImpl.error("JWT is null"));
@@ -122,6 +119,17 @@ public class JWTAuthenticator implements Authenticator {
         String token = getUnexpiredAccessToken();
         if (token != null) {
             handler.onComplete(ResultImpl.success(token));
+            return;
+        }
+        refreshToken(handler);
+    }
+
+    @Override
+    public void refreshToken(CompletionHandler<String> handler) {
+        checkNotNull(handler, "refreshToken: CompletionHandler should not be null");
+        String jwt = getUnexpiredJwt();
+        if (jwt == null) {
+            handler.onComplete(ResultImpl.error("JWT is null"));
             return;
         }
         _authService.getToken(jwt).enqueue(new Callback<JwtToken>() {
@@ -206,7 +214,7 @@ public class JWTAuthenticator implements Authenticator {
         }
     }
 
-    @SparkInjector.AfterInjected
+    @AfterInjected
     private void afterInjected() {
         if (_provider != null && _token != null) {
             AuthenticatedUser authenticatedUser = new AuthenticatedUser("", new ActorRecord.ActorKey(""), "", _token, "Unknown", null, 0, null);

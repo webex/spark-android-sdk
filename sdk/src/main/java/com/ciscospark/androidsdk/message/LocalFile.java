@@ -1,17 +1,17 @@
 package com.ciscospark.androidsdk.message;
 
-import com.cisco.spark.android.util.FileUtils;
-
 import java.io.File;
 
 /**
  * A data type represents a local file.
+ *
  * @since 1.4.0
  */
 public class LocalFile {
 
     /**
      * A data type represents a local file thumbnail.
+     *
      * @since 1.4.0
      */
     public static class Thumbnail {
@@ -31,9 +31,11 @@ public class LocalFile {
 
     public LocalFile(File file) {
         this._file = file;
-        this.name = file.getName();
-        this.size = file.length();
-        this.path = file.getPath();
+        if (_file.exists() && _file.isFile()) {
+            this.name = file.getName();
+            this.size = file.length();
+            this.path = file.getPath();
+        }
     }
 
     public File getFile() {

@@ -37,7 +37,7 @@ Assuming you already have an Android project, e.g. _MySparkApp_, for your Androi
 
     ```groovy
     dependencies { 
-        compile('com.ciscospark:androidsdk:1.3.0@aar', {
+        compile('com.ciscospark:androidsdk:1.4.0@aar', {
             transitive = true
         })
     }
@@ -291,6 +291,44 @@ Here are some examples of how to use the Android SDK in your app.
     });
     
     ```
+
+9. Post a message
+
+    ```java
+    spark.message().post(
+        idOrEmail,  // person id, email or room id
+        message,    // text message to be sent
+        mentions,   // list of Mention object
+        files,      // list of files to be sent
+        new CompletionHandler<Message>() {
+            @Override
+            public void onComplete(Result<Message> result) {
+                if (result.isSuccessful()) {
+                    // message sent success
+                } else {
+                    // message sent failed
+                }
+            }
+        }));
+    ```
+
+10. Receive a message
+
+    ```java
+    spark.message().setMessageObserver(
+        new MessageObserver() {
+            void onEvent(MessageEvent event) {
+                if (event instanceof MessageArrived) {
+                    Message message = event.getMessage();
+                    // new message arrived
+                } else if (event instanceof MessageDeleted) {
+                    // message deleted
+                }
+            }
+        }
+    );
+    ```
+
 ## Contribute
 
 Pull requests welcome. To suggest changes to the SDK, please fork this repository and submit a pull request with your changes. Your request will be reviewed by one of the project maintainers.

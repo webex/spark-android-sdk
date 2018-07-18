@@ -256,7 +256,7 @@ Here are some examples of how to use the Android SDK in your app.
     });
     ```
     
-8. Screen share (view only):
+8. Receive screen share:
 
     ```java
     spark.phone().dial(roomId, MediaOption.audioVideoSharing(new Pair<>(localView,remoteView),shareView), new CompletionHandler<Call>() {
@@ -292,7 +292,15 @@ Here are some examples of how to use the Android SDK in your app.
     
     ```
 
-9. Post a message
+9. Start/stop sharing screen:
+
+    ```java
+    activeCall.startSharing(r -> Ln.d("startSharing result: " + r));
+    boolean isSharing = activeCall.isSendingSharing();
+    activeCall.stopSharing(r -> Ln.d("stopSharing result: " + r));
+    ```
+
+10. Post a message
 
     ```java
     spark.message().post(
@@ -312,7 +320,7 @@ Here are some examples of how to use the Android SDK in your app.
         }));
     ```
 
-10. Receive a message
+11. Receive a message
 
     ```java
     spark.message().setMessageObserver(

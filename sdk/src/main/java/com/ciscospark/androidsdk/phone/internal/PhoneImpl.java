@@ -753,9 +753,11 @@ public class PhoneImpl implements Phone {
         //call membership changed
         List<CallObserver.CallMembershipChangedEvent> events = new ArrayList<>();
         for (LocusParticipant locusParticipant : event.getJoinedParticipants()) {
-            events.add(new CallObserver.MembershipJoinedEvent(call, new CallMembershipImpl(locusParticipant, call)));
+            if (!locusParticipant.getDeviceUrl().equals(_device.getUrl()))
+                events.add(new CallObserver.MembershipJoinedEvent(call, new CallMembershipImpl(locusParticipant, call)));
         }
-        _sendCallMembershipChanged(call, events);
+        if (events.size() > 0)
+            _sendCallMembershipChanged(call, events);
 
     }
 

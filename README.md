@@ -1,7 +1,7 @@
 # Cisco Spark Android SDK
 
-[![Travis CI](https://travis-ci.org/ciscospark/spark-android-sdk.svg)](https://travis-ci.org/ciscospark/spark-android-sdk)
-[![license](https://img.shields.io/github/license/ciscospark/spark-android-sdk.svg)](https://github.com/ciscospark/spark-android-sdk/blob/master/LICENSE)
+[![Travis CI](https://travis-ci.org/webex/spark-android-sdk.svg)](https://travis-ci.org/webex/spark-android-sdk)
+[![license](https://img.shields.io/github/license/webex/spark-android-sdk.svg)](https://github.com/webex/spark-android-sdk/blob/master/LICENSE)
 
 > The Cisco Spark™ Android SDK
 
@@ -297,6 +297,6 @@ Pull requests welcome. To suggest changes to the SDK, please fork this repositor
 
 ## License
 
-&copy; 2016-2017 Cisco Systems, Inc. and/or its affiliates. All Rights Reserved.
+&copy; 2016-2018 Cisco Systems, Inc. and/or its affiliates. All Rights Reserved.
 
 See [LICENSE](https://github.com/ciscospark/spark-android-sdk/blob/master/LICENSE) for details.

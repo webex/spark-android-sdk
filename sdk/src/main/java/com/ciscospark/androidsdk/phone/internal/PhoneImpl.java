@@ -406,6 +406,7 @@ public class PhoneImpl implements Phone {
         }
         _preview.setPreviewWindow(view);
         _preview.startSelfView();
+        setDisplayRotation(RotationHandler.getRotation(_context));
     }
 
     public void stopPreview() {

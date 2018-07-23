@@ -1,7 +1,8 @@
 package com.ciscospark.androidsdk.message;
 
 /**
- *
+ * The struct of a message event
+ * @since 1.4.0
  */
 public interface MessageObserver {
 
@@ -12,7 +13,8 @@ public interface MessageObserver {
     }
 
     /**
-     *
+     * The struct of a new message received event
+     * @since 1.4.0
      */
     class MessageArrived extends  MessageEvent {
         private Message message;
@@ -30,7 +32,8 @@ public interface MessageObserver {
     }
 
     /**
-     *
+     * The struct of a message delete event
+     * @since 1.4.0
      */
     class MessageDeleted extends MessageEvent {
         private String messageId;

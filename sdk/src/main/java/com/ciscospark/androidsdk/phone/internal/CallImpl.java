@@ -513,6 +513,7 @@ public class CallImpl implements Call {
         if (observer != null) {
             observer.onMediaChanged(mediaEvent);
         }
+        _phone.setRemoteSendingVideo(isRemoteSendingVideo());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

@@ -183,6 +183,9 @@ public class PhoneImpl implements Phone {
     private Uri _currentSharingUri;
 
     private boolean _isRemoteSendingVideo;
+    public void setRemoteSendingVideo(boolean isSending){
+        _isRemoteSendingVideo = isSending;
+    }
 
     private boolean _isRemoteSendingAudio;
 

@@ -27,6 +27,7 @@ import java.util.List;
 import com.ciscospark.androidsdk.CompletionHandler;
 import com.ciscospark.androidsdk.Result;
 import com.ciscospark.androidsdk.Spark;
+import com.ciscospark.androidsdk.SparkTestRunner;
 import com.ciscospark.androidsdk.auth.JWTAuthenticator;
 import com.ciscospark.androidsdk.membership.internal.MembershipClientImpl;
 
@@ -39,35 +40,76 @@ import org.junit.Test;
 
 public class MembershipClientTest {
 
-    private static String auth_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJreWxlX2RlbW8iLCJuYW1lIjoia3lsZV9kZW1vIiwiaXNzIjoiY2Q1YzlhZjctOGVkMy00ZTE1LTk3MDUtMDI1ZWYzMGIxYjZhIn0.KuabN0TWa00F2Auv4vnu8DXrXAiVM9p1dL8fJUEScbg";
-    private static String testPersonId = "Y2lzY29zcGFyazovL3VzL1BFT1BMRS83MmEyYTY4ZS1kNjc5LTRkMTUtOTdlOC1mNzRiZWViYTA2OWU";
-    private static JWTAuthenticator authenticator;
+    private static final String SPARK_ROOM_CALL_ROOM_ID = "Y2lzY29zcGFyazovL3VzL1JPT00vOWM2ZjQyZDAtMGFmNi0xMWU4LTg2ODQtZmQ0MTFjYTUzOWZl";
+    private static String sparkUserEmail = "sparksdktestuser15@tropo.com";
     private static MembershipClient mClient;
-    private static Spark mSpark;
-    private static boolean authCompleted = false;
+    private static Membership mMembership, mModerator;
 
     @BeforeClass
     public static void setUp() throws Exception {
+        Thread.sleep(10*1000);
         System.out.println("setup test case");
-        authenticator = new JWTAuthenticator();
-        authenticator.authorize(auth_token);
-        mClient = new MembershipClientImpl(authenticator);
+        Spark spark = SparkTestRunner.getSpark();
+        mClient = spark.memberships();
     }
 
     @Test
-    public void list() throws Exception {
-        mClient.list(null, null, null, -1, new CompletionHandler<List<Membership>>() {
+    public void testcase1() throws  Exception{
+        System.out.println("create membership");
+        mClient.create(SPARK_ROOM_CALL_ROOM_ID, null, sparkUserEmail, false, new CompletionHandler<Membership>() {
+            @Override
+            public void onComplete(Result<Membership> result) {
+                System.out.println(result.getData());
+                mMembership = result.getData();
+            }
+        });
+        Thread.sleep(10*1000);
+    }
+
+    @Test
+    public void testcase2() throws Exception {
+        System.out.println("lsit membership");
+        mClient.list(SPARK_ROOM_CALL_ROOM_ID, null, null, 0, new CompletionHandler<List<Membership>>() {
             @Override
             public void onComplete(Result<List<Membership>> result) {
-                System.out.println(result);
+                for (Membership membership : result.getData()) {
+                    System.out.println(membership);
+                    if (membership.getPersonEmail().equals("qimdeng@cisco.com"))
+                        mModerator = membership;
+                }
             }
         });
         Thread.sleep(10 * 1000);
     }
 
     @Test
-    public void delete() throws Exception {
-        mClient.delete("Y2lzY29zcGFyazovL3VzL01FTUJFUlNISVAvNzJhMmE2OGUtZDY3OS00ZDE1LTk3ZTgtZjc0YmVlYmEwNjllOmQzM2VmMWIwLThmOWItMTFlNy04MmRjLTk3ZTgzOWJlYjM3ZQ", new CompletionHandler<Void>() {
+    public void testcase3() throws Exception {
+        System.out.println("update membership");
+        mClient.update(mModerator.getId(), !mModerator.isModerator(), new CompletionHandler<Membership>() {
+            @Override
+            public void onComplete(Result<Membership> result) {
+                System.out.println(result.getData());
+            }
+        });
+        Thread.sleep(10*1000);
+    }
+
+    @Test
+    public void testcase4() throws Exception {
+        System.out.println("get membership");
+        mClient.get(mMembership.getId(), new CompletionHandler<Membership>() {
+            @Override
+            public void onComplete(Result<Membership> result) {
+                System.out.println(result.getData());
+            }
+        });
+        Thread.sleep(10*1000);
+    }
+
+    @Test
+    public void testcase5() throws Exception {
+        System.out.println("delete membership");
+        mClient.delete(mMembership.getId(), new CompletionHandler<Void>() {
             @Override
             public void onComplete(Result<Void> result) {
                 System.out.println(result);

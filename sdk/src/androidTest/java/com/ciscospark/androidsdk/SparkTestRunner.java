@@ -25,17 +25,95 @@ package com.ciscospark.androidsdk;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Handler;
 import android.support.test.runner.AndroidJUnitRunner;
 
+import com.ciscospark.androidsdk.auth.OAuthTestUserAuthenticator;
 
-public class SparkTestRunner extends AndroidJUnitRunner {
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+
+public class SparkTestRunner extends AndroidJUnitRunner{
+    private static String SparkUserEmail;
+    private static String SparkUserName;
+    private static String SparkUserPwd;
+    private static String CLIENT_ID;
+    private static String CLIENT_SEC;
+    private static String REDIRECT_URL;
+    private static String SCOPE ;
 
     static Application application;
+    static Spark spark;
+    public static Spark getSpark(){
+        return spark;
+    }
 
     @Override
     public Application newApplication(ClassLoader cl, String className, Context context) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+        System.out.println("!!! newApplication !!!");
         application = super.newApplication(cl, Application.class.getName(), context);
+        new Handler().postDelayed(()->loginBySparkId(), 1000);
         return application;
     }
 
+    private void loginBySparkId() {
+        System.out.println("!!! loginBySparkId !!!");
+        File file = new File(application.getExternalFilesDir("login"), "login.txt");
+        if (file.exists()) {
+            HashMap map = readKeyValueTxtToMap(file);
+            SparkUserEmail = (String) map.get("SparkUserEmail");
+            SparkUserName = (String) map.get("SparkUserName");
+            SparkUserPwd = (String) map.get("SparkUserPwd");
+            CLIENT_ID = (String) map.get("CLIENT_ID");
+            CLIENT_SEC = (String) map.get("CLIENT_SEC");
+            REDIRECT_URL = (String) map.get("REDIRECT_URL");
+            SCOPE = (String) map.get("SCOPE");
+            OAuthTestUserAuthenticator auth = new OAuthTestUserAuthenticator(CLIENT_ID, CLIENT_SEC, SCOPE, REDIRECT_URL,
+                    SparkUserEmail, SparkUserName, SparkUserPwd);
+            spark = new Spark(application, auth);
+            auth.authorize(result -> {
+                if (result.isSuccessful()) {
+                    System.out.println("loginBySparkId isSuccessful!");
+                } else {
+                    System.out.println("loginBySparkId failed!");
+                }
+            });
+        }else{
+            System.out.println("!!! login file is not exist !!!");
+        }
+    }
+
+    private HashMap readKeyValueTxtToMap(File file) {
+        while (true) {
+            final HashMap keyValueMap = new HashMap();
+            while (true) {
+                try {
+                    final InputStream open = new FileInputStream(file);
+                    final byte[] readArray = new byte[open.available()];
+                    open.read(readArray);
+                    open.close();
+                    final StringTokenizer allLine = new StringTokenizer(new String(readArray, "UTF-8"), "\r\n");
+                    while (allLine.hasMoreTokens()) {
+                        final StringTokenizer oneLine = new StringTokenizer(allLine.nextToken(), "=");
+                        final String leftKey = oneLine.nextToken();
+                        if (!oneLine.hasMoreTokens()) {
+                            break;
+                        }
+                        final String rightValue = oneLine.nextToken();
+                        keyValueMap.put(leftKey, rightValue);
+                    }
+                    return keyValueMap;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return keyValueMap;
+                }
+            }
+        }
+    }
 }

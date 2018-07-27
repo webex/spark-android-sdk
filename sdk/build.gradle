@@ -116,24 +116,24 @@ android {
 	def libraryModuleName = 'sdk'
 	def aarName = libraryModuleName + '-debug.aar'
 	def outputAarDir = rootProject.file(libraryModuleName + '/build/outputs/aar')
-	def outputAarUnzipedDir = rootProject.file(libraryModuleName + '/build/outputs/aar/unziped')
+	def outputAarUnzippedDir = rootProject.file(libraryModuleName + '/build/outputs/aar/unziped')
 	def aarReleaseFile = rootProject.file(libraryModuleName + '/build/outputs/aar/' + aarName)
 
 	task unzipAar(type: Copy) {
 		from zipTree(aarReleaseFile)
-		into outputAarUnzipedDir
+		into outputAarUnzippedDir
 	}
 
 	task addLicenseFileInUnzipedAar(type: Copy, dependsOn: 'unzipAar') {
 		def fromDir = rootProject.file('.')
 		from fromDir
-		into outputAarUnzipedDir
+		into outputAarUnzippedDir
 		include 'LICENSE'
 		include 'CISCO_API_LICENSE.pdf'
 	}
 
 	task reZipAar(type: Zip, dependsOn: 'addLicenseFileInUnzipedAar') {
-		from outputAarUnzipedDir
+		from outputAarUnzippedDir
 		include '*'
 		include '*/*'
 		archiveName aarName
@@ -143,6 +143,10 @@ android {
 	afterEvaluate {
 		bundleRelease.finalizedBy(reZipAar)
 		bundleDebug.finalizedBy(reZipAar)
+	}
+
+	packagingOptions {
+		exclude 'META-INF/rxjava.properties'
 	}
 }
 

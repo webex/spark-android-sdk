@@ -1,5 +1,5 @@
 /**
- * Copyright 2016-2017 Cisco Systems Inc
+ * Copyright 2016-2018 Cisco Systems Inc
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -84,7 +84,7 @@ public class SSOAuthenticator implements Authenticator {
     public SSOAuthenticator(@NonNull String clientId, @NonNull String clientSecret, @NonNull String scope, @NonNull String redirectUri,
                             @NonNull String email, @NonNull String identityProviderUri, @Nullable Map<String, String> queryItems) {
         super();
-        _authenticator = new OAuthAuthenticator(clientId, clientSecret, redirectUri, scope);
+        _authenticator = new OAuthAuthenticator(clientId, clientSecret, scope, redirectUri);
         _launcher = new OAuthLauncher();
         this.email = email;
         this.identityProviderUri = identityProviderUri;

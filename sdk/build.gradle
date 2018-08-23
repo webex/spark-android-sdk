@@ -9,7 +9,7 @@ ext {
 	moduleName = 'Cisco Spark Android SDK'
 	moduleGroupId = 'com.ciscospark'
 	moduleArtifactId = 'androidsdk'
-	moduleVersion = '1.4.0-SNAPSHOT'
+	moduleVersion = '1.4.0'
 	moduleDescription = 'Cisco Spark SDK for Android'
 	moduleSiteUrl = 'https://developer.ciscospark.com/getting-started.html'
 	moduleProjectUrl = 'https://github.com/ciscospark/spark-android-sdk'
@@ -231,7 +231,7 @@ dependencies {
 	kapt 'com.squareup.dagger:dagger-compiler:1.2.2'
 	annotationProcessor 'com.squareup.dagger:dagger-compiler:1.2.2'
 	
-	implementation('com.ciscospark:androidsdk_commlib:1.4.0-SNAPSHOT@aar', {
+	implementation('com.ciscospark:androidsdk_commlib:1.4.0@aar', {
         transitive = true
     })
     testCompile 'com.squareup.okhttp3:okhttp:3.9.0'

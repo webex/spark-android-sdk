@@ -1,3 +1,5 @@
+This repo is DEPRECATED. Check our newer Android SDK: https://github.com/webex/webex-android-sdk
+
 # Cisco Spark Android SDK
 
 [![Travis CI](https://travis-ci.org/webex/spark-android-sdk.svg)](https://travis-ci.org/webex/spark-android-sdk)
